@@ -1,0 +1,26 @@
+id,publisher,type,what_we_use_it_for,url,verified_on
+flexi_reg,HDFC AMC,Scheme page (Regular),"HDFC Flexi Cap Fund — TER, exit load, min SIP, benchmark, riskometer, AUM, fund manager",https://www.hdfcfund.com/explore/mutual-funds/hdfc-flexi-cap-fund/regular,16 Sep 2026
+flexi_dir,HDFC AMC,Scheme page (Direct),"HDFC Flexi Cap Fund — Direct Plan TER",https://www.hdfcfund.com/explore/mutual-funds/hdfc-flexi-cap-fund/direct,16 Sep 2026
+large_reg,HDFC AMC,Scheme page (Regular),"HDFC Large Cap Fund — TER, exit load, min SIP, benchmark, riskometer, AUM, fund manager",https://www.hdfcfund.com/explore/mutual-funds/hdfc-large-cap-fund/regular,16 Sep 2026
+large_dir,HDFC AMC,Scheme page (Direct),"HDFC Large Cap Fund — Direct Plan TER",https://www.hdfcfund.com/explore/mutual-funds/hdfc-large-cap-fund/direct,16 Sep 2026
+elss_reg,HDFC AMC,Scheme page (Regular),"HDFC ELSS Tax Saver Fund — TER, lock-in, exit load, min SIP, 80C, benchmark, riskometer",https://www.hdfcfund.com/explore/mutual-funds/hdfc-elss-tax-saver/regular,16 Sep 2026
+elss_dir,HDFC AMC,Scheme page (Direct),"HDFC ELSS Tax Saver Fund — Direct Plan TER",https://www.hdfcfund.com/explore/mutual-funds/hdfc-elss-tax-saver/direct,16 Sep 2026
+baf_reg,HDFC AMC,Scheme page (Regular),"HDFC Balanced Advantage Fund — TER, exit load (15% free), min SIP, benchmark, riskometer",https://www.hdfcfund.com/explore/mutual-funds/hdfc-balanced-advantage-fund/regular,16 Sep 2026
+baf_dir,HDFC AMC,Scheme page (Direct),"HDFC Balanced Advantage Fund — Direct Plan TER",https://www.hdfcfund.com/explore/mutual-funds/hdfc-balanced-advantage-fund/direct,16 Sep 2026
+liquid_reg,HDFC AMC,Scheme page (Regular),"HDFC Liquid Fund — TER, graded exit load, minimums, benchmark, riskometer",https://www.hdfcfund.com/explore/mutual-funds/hdfc-liquid-fund/regular,16 Sep 2026
+liquid_dir,HDFC AMC,Scheme page (Direct),"HDFC Liquid Fund — Direct Plan TER",https://www.hdfcfund.com/explore/mutual-funds/hdfc-liquid-fund/direct,16 Sep 2026
+flexi_sid,HDFC AMC,SID (PDF),"Scheme Information Document — HDFC Flexi Cap Fund",https://files.hdfcfund.com/s3fs-public/SID/2025-05/SID%20-%20HDFC%20Flexi%20Cap%20Fund%20dated%20May%2030,%202025.pdf,16 Sep 2026
+elss_sid,HDFC AMC,SID (PDF),"Scheme Information Document — HDFC ELSS Tax Saver Fund",https://files.hdfcfund.com/s3fs-public/SID/2024-11/SID%20-%20HDFC%20ELSS%20Tax%20Saver%20Fund%20dated%20November%2021,%202024.pdf,16 Sep 2026
+factsheets,HDFC AMC,Factsheets,"Monthly factsheets (official performance data — linked, never computed)",https://www.hdfcfund.com/mutual-funds/factsheets,16 Sep 2026
+cas_hdfc,HDFC AMC,Service page,"How to download a Consolidated Account Statement",https://www.hdfcfund.com/services/consolidated-account-statement,16 Sep 2026
+cas_faq,HDFC AMC,FAQ,"CAS frequency, contents, cost",https://www.hdfcfund.com/services/faqs/consolidated-account-statement,16 Sep 2026
+cg_hdfc,HDFC AMC,Guide,"How to get a capital gains statement",https://www.hdfcfund.com/learn/blog/how-get-capital-gain-statement-mutual-fund-schemes-india,16 Sep 2026
+sebi_risk,SEBI,Investor education,"Riskometer — six risk levels",https://investor.sebi.gov.in/riskometer.html,16 Sep 2026
+sebi_exit,SEBI,Investor education,"Exit load — definition and example",https://investor.sebi.gov.in/exit_load.html,16 Sep 2026
+sebi_elss,SEBI,Investor education,"ELSS — lock-in, 80C limit, 80% equity",https://investor.sebi.gov.in/elss.html,16 Sep 2026
+sebi_plans,SEBI,Investor education,"Regular vs Direct plans",https://investor.sebi.gov.in/regular_and_direct_mutual_funds.html,16 Sep 2026
+sebi_mf,SEBI,Investor education,"Understanding mutual funds (used for polite refusals)",https://investor.sebi.gov.in/understanding_mf.html,16 Sep 2026
+amfi_ter,AMFI,Knowledge centre,"Total Expense Ratio explained",https://www.amfiindia.com/investor/knowledge-center-info?zoneName=expenseRatio,16 Sep 2026
+amfi_direct,AMFI,Knowledge centre,"Direct Plan explained",https://www.amfiindia.com/investor/knowledge-center-info?zoneName=DirectPlan,16 Sep 2026
+amfi_cas,AMFI,Investor service FAQ,"Consolidated Account Statement",https://www.amfiindia.com/investor/become-mf-distributor?zoneName=consolidatedAcct,16 Sep 2026
+amfi_risk,AMFI,Online centre,"Scheme-wise Risk-o-meter disclosures",https://www.amfiindia.com/online-center/risk-o-meter,16 Sep 2026
