@@ -15,7 +15,7 @@ Built for the NextLeap PM Fellowship — Milestone 4 (*AI System Design, LLMs & 
 | **AMC** | HDFC Asset Management Company |
 | **Schemes (5)** | HDFC Large Cap Fund · HDFC Flexi Cap Fund · HDFC ELSS Tax Saver Fund · HDFC Balanced Advantage Fund · HDFC Liquid Fund |
 | **Facts covered** | Expense ratio (Regular & Direct), exit load, minimum SIP / lumpsum, lock-in, riskometer, benchmark, fund manager & AUM, SID download, how to get CAS and capital-gains statements, concept explainers (TER, exit load, riskometer, ELSS, direct vs regular) |
-| **Corpus** | 25 official pages → 51 fact chunks, each with its own citation URL and a "verified on" date |
+| **Corpus** | 25 official pages → 53 fact chunks, each with its own citation URL and a "verified on" date |
 | **Publishers** | HDFC AMC (hdfcfund.com) · SEBI (investor.sebi.gov.in) · AMFI (amfiindia.com) — no third-party blogs |
 | **Out of scope by design** | Returns / rankings / predictions · buy-sell-switch advice · other AMCs · anything needing personal data |
 
@@ -27,7 +27,9 @@ Built for the NextLeap PM Fellowship — Milestone 4 (*AI System Design, LLMs & 
 | **Factual side-by-side** | "Compare HDFC Flexi Cap and HDFC ELSS" renders a table of official facts, each column linked to its scheme page. Returns are still refused — comparison is of *facts*, never performance |
 | **Fact tiles on every answer** | The exact values the sentence relies on (e.g. `1.37%` / `0.77%`) are pulled out as tiles, so the number is scannable and the sentence is readable |
 | **Proof panel** | Every answer shows its pipeline — PII check, intent decision, entities, top-3 retrieval scores, and the exact grounding excerpt — so a reviewer can audit *why* the assistant said what it said |
-| **Conversation memory** | "Expense ratio of HDFC Large Cap Fund" → "and its exit load?" just works; "minimum SIP" with no scheme asks which one and remembers the topic |
+| **Conversation memory** | "Expense ratio of HDFC Large Cap Fund" → "and its exit load?" → "and for ELSS?" → "direct plan?" all resolve; "minimum SIP" with no scheme asks which one and remembers the topic |
+| **Factual superlatives** | "Which scheme has the lowest expense ratio?" is a fact question, not advice — it renders all five schemes' TER side by side with a note that lower is not a recommendation |
+| **Situation handling** | Live NAV/AUM requests get the official page instead of a stale number; "what's my balance" explains there is no account access and links the CAS guide; complaints ("I lost money…") are acknowledged and routed to investor services / SEBI SCORES; Groww-app questions, taxation, NRI/KYC, STP/SWP and SIP changes are declared out of scope honestly instead of answering something adjacent; "what can you do", "who built you", "bye" and empty input all get a sensible reply |
 | **Copy with citation** | One click copies answer + source URL + "last updated" stamp, ready to paste into a support reply |
 | **Voice input** | Microphone button (Web Speech API, en-IN) where the browser supports it — the same accessibility lever as the final-project work on voice for Indian users |
 | **Phone-first layout** | Three-pane on desktop, tabbed (Schemes · Ask · Proof) on mobile; respects reduced-motion |
@@ -41,7 +43,7 @@ flowchart LR
     P -- clean --> I[2 · Intent gate<br/>advice? returns? other AMC? greeting?]
     I -- advice --> R2[Polite facts-only refusal<br/>+ SEBI educational link]
     I -- returns --> R3[No performance claims<br/>+ link to official factsheet]
-    I -- out of scope --> R4[Explain coverage]
+    I -- out of scope / Groww / live NAV / account / complaint --> R4[Explain coverage<br/>or point to the official page]
     I -- factual --> E[3 · Entities<br/>scheme · plan · topic<br/>+ conversation memory]
     E -- topic but no scheme --> C[Clarify: which scheme?<br/>5 tap-to-choose chips]
     E --> RT[4 · Retrieval<br/>BM25 over 51 chunks<br/>+ scheme/topic boosts]
@@ -50,13 +52,13 @@ flowchart LR
     A -. optional, BYO key .-> L[LLM rephrase<br/>validated → else fallback]
 ```
 
-**W1 — Thinking like a model.** The first two stages decide *answer vs refuse* before any retrieval happens: personal data is discarded, opinion/performance questions are refused with an educational link, and questions outside the five schemes are declined explicitly. Only clean, factual queries reach the corpus.
+**W1 — Thinking like a model.** The first two stages decide *answer vs refuse* before any retrieval happens: personal data is discarded, opinion/performance questions are refused with an educational link, live-data requests (today's NAV) are redirected to the official page, account and complaint messages are handled without pretending to have access, and questions outside the five schemes — other AMCs, the Groww app, taxation, NRI/KYC, STP/SWP — are declined explicitly. Only clean, factual queries reach the corpus. The advice gate is deliberately narrow around *facts about investing*: "how much do I need to start a SIP?" and "can I invest ₹500?" are minimum-investment facts, while "is it a good fund?" and "should I choose direct?" are refused.
 
 **W2 — LLMs & prompting.** The default answer is *extractive*: each chunk carries a hand-written ≤3-sentence answer taken from the source page, so the system is deterministic and cannot hallucinate. An optional LLM mode (bring your own Gemini/OpenAI key, stored in memory only) rephrases the retrieved facts under a strict system prompt with a `NOT_IN_SOURCES` escape hatch and a `[1]` citation requirement — and every generation is validated (≤3 sentences, no advice words, one citation) or the extractive answer is shown instead. See [prompts/system_prompt.md](prompts/system_prompt.md).
 
-**W3 — RAG.** Retrieval is BM25 over a tiny, curated corpus with synonym normalisation (TER → expense, lock-in → lockin, CAS → statement…) plus entity boosts: the named scheme's chunks get +4, other schemes −6, the detected topic +3, and concept questions ("what is…") prefer the SEBI/AMFI explainer chunks. A confidence threshold turns weak matches into an honest "not in my sources". The right-hand **Proof** panel in the UI shows every step, the top-3 chunk scores and the grounding excerpt for each answer.
+**W3 — RAG.** Retrieval is BM25 over a tiny, curated corpus with synonym normalisation (TER → expense, lock-in → lockin, CAS → statement…) plus entity boosts: the named scheme's chunks get +4, other schemes −6, the detected topic +3, and concept questions ("what is…") prefer the SEBI/AMFI explainer chunks. A confidence threshold turns weak matches into an honest "not in my sources" — stricter when neither a scheme nor a topic was recognised (so "1+1" or "tell me a joke" never land on a random chunk), and when a scheme is named but the rest of the question matches nothing ("STP HDFC Flexi Cap") the assistant says so rather than answering a different fact about that scheme. The right-hand **Proof** panel in the UI shows every step, the top-3 chunk scores and the grounding excerpt for each answer.
 
-**Conversation memory.** The engine remembers the last scheme, so "Expense ratio of HDFC Large Cap Fund" → "and its exit load?" works; and if a user asks "minimum SIP" with no scheme, it asks which one and applies the pending topic to the chip they tap.
+**Conversation memory.** The engine remembers the last scheme *and* the last topic, so "Expense ratio of HDFC Large Cap Fund" → "and its exit load?" → "and for ELSS?" → "direct plan?" each resolve (the last one cites the Direct-plan page); and if a user asks "minimum SIP" with no scheme, it asks which one and applies the pending topic to the chip they tap.
 
 ## 4. Run locally
 
@@ -69,7 +71,7 @@ python3 -m http.server 8000      # or any static server
 # open http://localhost:8000
 ```
 
-Run the regression suite (33 cases: retrieval targets, refusals, PII, scope, follow-ups, ≤3-sentence + official-domain checks on every chunk):
+Run the regression suite (65 cases: retrieval targets, refusals, PII, scope, live-data and account handling, a six-turn conversation, ≤3-sentence + official-domain checks on every chunk):
 
 ```bash
 node eval/run_eval.js            # exit code 1 on any failure
@@ -84,12 +86,12 @@ Update a fact: edit the chunk in `corpus.js`, bump `UPDATED`, re-run the eval.
 |---|---|
 | `index.html` · `styles.css` · `app.js` | UI: welcome + 3 example questions, chat with fact tiles and riskometer gauge, Scheme Explorer, factual compare table, Proof panel, Sources modal, voice input |
 | `engine.js` | PII guard → intent gate → entity detection → BM25 retrieval → grounded answer; LLM prompt builder + validator |
-| `corpus.js` | The 51 fact chunks (text, answer, URL, publisher, verified date), the 25 source URLs, and the structured facts table behind the Explorer and comparisons |
+| `corpus.js` | The 53 fact chunks (text, answer, URL, publisher, verified date), the 25 source URLs, and the structured facts table behind the Explorer and comparisons |
 | `sources.csv` | Source list — publisher, type, what each page is used for, URL, verified date |
 | `sample_qa.md` | 10 sample queries with the assistant's exact answers and links (auto-generated) |
 | `prompts/system_prompt.md` | System prompt, user template, validation rules and the reasoning behind them |
 | `DISCLAIMER.md` | Disclaimer and refusal copy used in the UI |
-| `eval/run_eval.js` | Regression suite |
+| `eval/run_eval.js` | Regression suite (65 cases incl. multi-turn) |
 
 ## 6. Source list (25 official pages, verified 16 Sep 2026)
 
@@ -159,7 +161,7 @@ Full table with publisher, type and purpose: [sources.csv](sources.csv).
 |---|---|
 | Public sources only, no blogs | Every chunk URL is on hdfcfund.com / sebi.gov.in / amfiindia.com — enforced by the eval |
 | No PII accepted or stored | Regex guard for PAN, Aadhaar, phone, email, OTP, account/folio numbers → message discarded, nothing logged; no analytics, no storage of any kind |
-| No performance claims | Returns / CAGR / rankings / predictions are refused and linked to the official factsheet |
+| No performance claims | Returns / CAGR / rankings / predictions are refused and linked to the official factsheet; live NAV/AUM requests are redirected to the official scheme page rather than answered with a stale figure |
 | Clarity: ≤3 sentences | Every chunk answer is checked by the eval; LLM answers are validated or dropped |
 | "Last updated from sources" | Stamped on every factual answer (`UPDATED` in `corpus.js`) |
 | One clear citation | Exactly one URL per answer; Direct-plan questions cite the Direct-plan page |
@@ -168,9 +170,10 @@ Full table with publisher, type and purpose: [sources.csv](sources.csv).
 ## 9. Known limits
 
 - **Facts go stale.** TER changes monthly and AUM changes daily; values were verified on 16 Sep 2026 and every answer says so. A production version would re-scrape the scheme pages nightly and fail closed if a page changes shape.
-- **Keyword retrieval, not embeddings.** BM25 + synonyms handles the ~50-chunk corpus well (33/33 eval cases) but would need embeddings and re-ranking beyond a few hundred chunks or across AMCs.
-- **English only.** Queries in Hindi or Hinglish are not supported in this version.
-- **Regex guardrails are conservative.** Words like "better" or "best" always trigger a refusal even in factual phrasings ("which plan has the better TER?") — deliberately biased toward refusing rather than accidentally advising.
+- **Keyword retrieval, not embeddings.** BM25 + synonyms handles the ~50-chunk corpus well (65/65 eval cases) but would need embeddings and re-ranking beyond a few hundred chunks or across AMCs.
+- **English only.** Hinglish works only when the fact words are English ("hdfc flexi cap ka expense ratio kya hai"); pure Hindi is not supported.
+- **Not covered by design.** Taxation on redemption (LTCG/STCG), IDCW options, NRI/KYC eligibility, STP/SWP, changing or stopping a SIP, nominations and buy/sell steps are outside the 25-page corpus — the assistant says so and points to the scheme's official page rather than guessing.
+- **Regex guardrails are conservative.** Words like "better" or "best" always trigger a refusal even in factual phrasings ("which plan has the better TER?") — deliberately biased toward refusing rather than accidentally advising. Neutral superlatives ("lowest", "highest", "which has…") are treated as factual and answered with a side-by-side table.
 - **One AMC.** Extending to another AMC means adding its scheme pages to `corpus.js`; the engine is AMC-agnostic.
 - **LLM mode is optional and client-side.** Keys are held in page memory only and sent directly to the provider from the user's browser; nothing passes through a server.
 

@@ -18,8 +18,8 @@
   const AUM_DATE = '31 Aug 2026';
 
   const SCHEMES = {
-    flexi:  { key: 'flexi',  name: 'HDFC Flexi Cap Fund',          short: 'Flexi Cap',          aliases: ['flexi cap', 'flexicap', 'flexi-cap', 'hdfc flexi'] },
-    large:  { key: 'large',  name: 'HDFC Large Cap Fund',          short: 'Large Cap',          aliases: ['large cap', 'largecap', 'large-cap', 'hdfc large', 'top 100', 'bluechip'] },
+    flexi:  { key: 'flexi',  name: 'HDFC Flexi Cap Fund',          short: 'Flexi Cap',          aliases: ['flexi cap', 'flexicap', 'flexi-cap', 'hdfc flexi', 'hdfc equity fund', 'hdfc equity'] },
+    large:  { key: 'large',  name: 'HDFC Large Cap Fund',          short: 'Large Cap',          aliases: ['large cap', 'largecap', 'large-cap', 'hdfc large', 'top 100', 'top100', 'bluechip'] },
     elss:   { key: 'elss',   name: 'HDFC ELSS Tax Saver Fund',     short: 'ELSS Tax Saver',     aliases: ['elss', 'tax saver', 'taxsaver', 'tax saving', 'tax-saver', '80c', 'hdfc elss'] },
     baf:    { key: 'baf',    name: 'HDFC Balanced Advantage Fund', short: 'Balanced Advantage', aliases: ['balanced advantage', 'baf', 'hdfc baf', 'dynamic asset allocation', 'hybrid'] },
     liquid: { key: 'liquid', name: 'HDFC Liquid Fund',             short: 'Liquid',             aliases: ['liquid fund', 'liquid', 'hdfc liquid', 'money market', 'debt fund'] },
@@ -208,6 +208,13 @@
       'A mutual fund pools money from many investors and invests it in securities such as stocks and bonds; each investor holds units whose value is the Net Asset Value (NAV). SEBI regulates all mutual funds in India and its investor portal explains the basics.'),
 
     // ───────────── Statements / documents ─────────────
+    c('concept-sip', null, 'concept_mf', 'SEBI', URLS.sebi_mf,
+      'what is sip systematic investment plan swp systematic withdrawal plan invest regularly fixed amount intervals instalment',
+      'A Systematic Investment Plan (SIP) is a facility to invest in a mutual fund scheme in a systematic manner — a fixed amount at regular intervals — and a Systematic Withdrawal Plan (SWP) is the equivalent for redeeming. The minimum SIP amount is set scheme by scheme; ask me for a specific scheme to see it.'),
+    c('concept-nav', null, 'concept_mf', 'SEBI', URLS.sebi_mf,
+      'what is nav net asset value per unit published daily accounting value',
+      'NAV (Net Asset Value) is the accounting value of each unit of a scheme, and SEBI requires it to be published daily. It is already net of the scheme\'s expense ratio, and it changes every business day, so always read the current NAV from the official scheme page.'),
+
     c('howto-cas-hdfc', null, 'howto_statement', 'HDFC AMC', URLS.cas_hdfc,
       'how to download account statement consolidated account statement CAS HDFC mutual fund email PAN folio steps',
       'On the HDFC Mutual Fund website, open "Consolidated Account Statement", enter your PAN or folio number, choose the duration (default: current financial year), verify with OTP and click "Send Email" to receive the statement. There is no charge for the statement.'),

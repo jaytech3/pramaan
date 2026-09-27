@@ -38,7 +38,7 @@
         <div class="facts"><div><small>TER Reg / Dir</small><b>${f.ter_regular} / ${f.ter_direct}</b></div><div><small>Exit load</small><b title="${esc(f.exit_load)}">${esc(f.exit_load.replace(/ within 1 year, nil after/, ' <1y').replace(/^Graded.*$/, 'Graded ≤6d').replace(/^15% of units free.*$/, '15% free, 1%'))}</b></div><div><small>Min SIP</small><b>${f.min_sip}</b></div></div>
         <div class="acts"><button class="btn ask" type="button">Ask about it</button><button class="btn cmp${selected.has(s.key) ? ' on' : ''}" type="button">${selected.has(s.key) ? 'Selected' : 'Compare'}</button></div>`;
       el.querySelector('.ask').onclick = () => { input.value = `Overview of ${s.name}`; input.focus(); autosize(); if (window.innerWidth <= 1100) setView('chat'); submit(input.value); };
-      el.querySelector('.cmp').onclick = () => { selected.has(s.key) ? selected.delete(s.key) : selected.size < 3 && selected.add(s.key); renderRail(); };
+      el.querySelector('.cmp').onclick = () => { selected.has(s.key) ? selected.delete(s.key) : selected.size < 5 && selected.add(s.key); renderRail(); };
       list.appendChild(el);
     }
     const bar = $('compare-bar'), go = $('compare-go');
@@ -62,12 +62,12 @@
   const avatar = () => `<svg class="avatar" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="var(--teal)"/><path d="M18 33l9 9 19-20" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function addTyping() { const m = document.createElement('div'); m.className = 'msg bot'; m.innerHTML = `${avatar()}<div class="card"><div class="typing"><i></i><i></i><i></i></div></div>`; thread.appendChild(m); scrollDown(); return m; }
 
-  const KIND = { fact: ['Verified fact', 'fact'], compare: ['Factual comparison', 'fact'], refuse_advice: ['No advice — facts only', 'warn'], refuse_performance: ['No returns or rankings', 'warn'], refuse_pii: ['Personal data discarded', 'danger'], out_of_scope: ['Outside my sources', 'warn'], not_found: ['Not in my sources', 'warn'], clarify: ['Which scheme?', ''], greeting: ['Welcome', ''] };
+  const KIND = { fact: ['Verified fact', 'fact'], compare: ['Factual comparison', 'fact'], refuse_advice: ['No advice — facts only', 'warn'], refuse_performance: ['No returns or rankings', 'warn'], refuse_pii: ['Personal data discarded', 'danger'], out_of_scope: ['Outside my sources', 'warn'], not_found: ['Not in my sources', 'warn'], live_data: ['Live data — see official page', 'warn'], clarify: ['Which scheme?', ''], greeting: ['Welcome', ''] };
 
   async function addBot(res, viaLLM) {
     const m = document.createElement('div'); m.className = 'msg bot';
     const [label, cls] = KIND[res.intent] || ['', ''];
-    const cardCls = res.intent === 'refuse_pii' ? 'card pii' : /^refuse|out_of_scope|not_found/.test(res.intent) ? 'card refuse' : 'card';
+    const cardCls = res.intent === 'refuse_pii' ? 'card pii' : /^refuse|out_of_scope|not_found|live_data/.test(res.intent) ? 'card refuse' : 'card';
     let html = `${avatar()}<div class="${cardCls}"><div class="kind ${cls}">${label}${viaLLM ? ' · reworded' : ''}</div><p class="ans"></p>`;
     if (res.highlights) html += `<div class="hl">${res.highlights.map(h => h.key === 'risk' ? `<div class="tile risk">${gauge(h.level, false)}<div><small>${esc(h.label)}</small><b class="small">${esc(h.value)}</b></div></div>` : `<div class="tile"><small>${esc(h.label)}</small><b class="${/^[₹\d]/.test(h.value) && h.value.length <= 12 ? '' : 'small'}">${esc(h.value)}</b></div>`).join('')}</div>`;
     if (res.compare) {

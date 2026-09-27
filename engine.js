@@ -33,12 +33,22 @@
   }
 
   // ───────────────────────── 2. INTENT GATE ─────────────────────────
-  const ADVICE_RE = /\b(should i|shall i|can i invest|is it (a )?good|is it safe|is it worth|worth (it|investing|buying)|recommend|suggest(ion)?s?|advice|advise|which (fund|scheme|one|plan) (is )?(better|best|good|should)|better (fund|option|than)|best (fund|scheme|elss|sip|option|performing|mutual)|top (fund|scheme|performing)|buy|sell|redeem now|exit now|switch (to|from)|good time|right time|invest in|start (a )?sip in|portfolio|allocat(e|ion)|how much should|where (should|to) invest|pick|choose|prefer|safe to|good for|suitable|suits? me|for me|right for|better|worse|best|ideal|which (one|fund|scheme)|opinion|think of|thoughts on|worth)\b/i;
+  const ADVICE_RE = /\b(should i|shall i|is (it|this|that|hdfc [a-z ]+?) (a )?(good|safe|worth|ok|fine)|good (fund|scheme|option|choice|investment|idea|to invest)|is it safe|is it worth|worth (it|investing|buying)|recommend|suggest(ion)?s?|advice|advise|which (fund|scheme|one|plan) (is )?(better|best|good|should)|better (fund|option|than)|best (fund|scheme|elss|sip|option|performing|mutual)|top (fund|scheme|performing)|buy|sell|redeem now|exit now|switch (to|from)|good time|right time|portfolio|allocat(e|ion)|how much should|where (should|to) invest|pick|choose|prefer|safe to|good for|suitable|suits? me|for me|right for|better|worse|best|ideal|which (one|fund|scheme)|opinion|think of|thoughts on|worth)\b/i;
   const PERFORMANCE_RE = /\b(return|returns|cagr|xirr|performance|performing|perform|growth rate|how much (will|would) (i|it)|profit|gain(s)? (will|would)|predict|forecast|outlook|target|nav (will|forecast|prediction|tomorrow|next)|beat|outperform|underperform|ranking|rank|rating|star|compare returns|1 ?year return|3 ?year return|5 ?year return|10 ?year return)\b/i;
   const OTHER_AMC_RE = /\b(sbi|axis|icici|nippon|mirae|kotak|parag parikh|ppfas|quant|motilal|uti|tata|aditya birla|absl|dsp|franklin|invesco|canara|sundaram|edelweiss|bandhan|whiteoak|zerodha|navi|360 one|bajaj finserv|helios|samco|jm financial|lic mf|pgim|union mf|mahindra manulife|baroda bnp|hsbc|trust mf|itI mf|shriram|taurus|nj mutual|old bridge|angel one|groww (mutual fund|mf|nifty|elss|liquid|large)|indiabulls)\b/i;
   const OFF_TOPIC_RE = /\b(stock|share price|crypto|bitcoin|fixed deposit|fd rate|ppf|nps|gold|real estate|insurance|ulip|loan|credit card|demat|ipo|nifty (today|level|prediction)|sensex)\b/i;
   const GREETING_RE = /^\s*(hi|hello|hey|namaste|hola|good (morning|afternoon|evening)|thanks?|thank you|ok|okay|cool|great)\b[\s!.]*$/i;
   const CONCEPT_RE = /\b(what is|what's|whats|what does|what are|meaning|means?|mean by|define|definition|explain|difference between|how does .* work|why (is|do|does)|how (do|can|to) (i )?(check|find|see|know|get|download|request)|where (to|can i|do i) (check|find|see|get|download))\b/i;
+
+  const HELP_RE = /\b(what can you (do|help|answer)|how (can|do) you help|who (are|built|made|created|trained) you|what are you|are you (a )?(bot|human|ai)|which (amc|amcs|schemes?|funds?) (do|can) you (cover|know|support|answer)|what do you (cover|know)|help me|about you|your (capabilities|features|sources))\b|^\s*(help|menu|start|options)\s*[?!.]*$/i;
+  const FAREWELL_RE = /^\s*(bye|goodbye|see you|ok bye|thanks?,? bye|good night|ttyl)\b[\s!.]*$/i;
+  const LIVE_DATA_RE = /\b(nav|net asset value|aum|unit price)\b.*\b(today|tonight|current|currently|latest|now|live|real[- ]?time|history|chart|yesterday|this (week|month))\b|\b(today'?s?|current|latest|live|real[- ]?time|yesterday'?s?)\b.*\b(nav|aum|unit price|price)\b/i;
+  const NAV_RE = /\b(nav|net asset value)\b/i;
+  const ACCOUNT_RE = /\b(my|our) (balance|portfolio|holdings?|folio|units|investments?|sips?|account|money|returns?|profit|loss)\b|\b(check|show|see|view) (my )?(balance|holdings|portfolio|units)\b|\bhow much (have i|do i have|is my)\b/i;
+  const COMPLAINT_RE = /\b(lost money|losing money|made a loss|in loss|fell|crashed|crash|scam|fraud|cheated|complain|complaint|grievance|useless|stupid|wrong answer|not helpful|bad bot)\b/i;
+  const GROWW_RE = /\bgroww\b/i;
+  const NOT_COVERED_RE = /\b(ltcg|stcg|capital gains? tax|tax on (redemption|gains|withdrawal|profit)|\btax\b.{0,25}\b(redemption|redeem|redeeming|withdrawal|maturity|profit|gains?)\b|taxation|tax rate|indexation|nri|nre|nro|kyc|e-?kyc|stp|swp|systematic (transfer|withdrawal)|stop (my |the |a )?sip|pause (my |the |a )?sip|cancel (my |the |a )?sip|nominee|nomination|how (to|do i|can i) (buy|purchase|sell|start|open|invest|register|sign up)|dividend|idcw)\b/i;
+  const SUPERLATIVE_RE = /\b(which|lowest|highest|cheapest|costliest|least|most|longest|shortest|all|each|every|any of|across|among)\b/i;
 
   // ───────────────────────── 3. ENTITY DETECTION ─────────────────────────
   const TOPIC_KEYWORDS = {
@@ -48,17 +58,19 @@
     lock_in:             ['lock-in', 'lock in', 'lockin', 'locked', 'lock period', 'when can i withdraw', 'when can i redeem', 'withdraw before'],
     riskometer_benchmark:['riskometer', 'risk-o-meter', 'risk o meter', 'risk level', 'risk', 'benchmark', 'index', 'tri'],
     fund_manager:        ['fund manager', 'manager', 'who manages', 'managed by', 'aum', 'assets under management', 'fund size', 'inception', 'launch', 'launched', 'started', 'old'],
-    tax_benefit:         ['tax benefit', '80c', 'section 80c', 'tax deduction', 'tax saving', 'save tax', 'deduction'],
+    tax_benefit:         ['tax benefit', '80c', 'section 80c', 'tax deduction', 'tax saving', 'save tax', 'deduction', 'tax can i save', 'save on tax', 'income tax', '1.5 lakh', 'tax exemption'],
     overview:            ['overview', 'about', 'what is hdfc', 'category', 'type of fund', 'invests in', 'objective', 'details', 'tell me about', 'info'],
     documents:           ['sid', 'kim', 'scheme information document', 'key information memorandum', 'offer document'],
     howto_statement:     ['account statement', 'statement', 'cas', 'consolidated'],
     howto_capital_gains: ['capital gain', 'capital gains', 'tax statement', 'itr', 'gains statement'],
     howto_factsheet:     ['factsheet', 'fact sheet', 'portfolio holdings', 'holdings'],
+    concept_mf:          ['mutual fund', 'mutual funds', 'net asset value', 'systematic investment', 'what is sip', 'what is a sip', 'what is nav', 'what is an nav', 'what does sip', 'what does nav', 'sip mean', 'nav mean', 'how does a mutual fund', 'how do mutual funds'],
     concept_plans:       ['direct plan', 'regular plan', 'direct vs regular', 'direct or regular', 'regular vs direct', 'regular or direct', 'distributor', 'commission', 'direct and regular'],
   };
+  const SCHEME_TOKENS = new Set(['hdfc', 'fund', 'mutual', 'scheme', 'flexi', 'cap', 'flexicap', 'large', 'largecap', 'top', '100', 'bluechip', 'elss', 'tax', 'saver', 'taxsaver', 'saving', '80c', 'balanced', 'advantage', 'baf', 'dynamic', 'asset', 'allocation', 'hybrid', 'liquid', 'money', 'market', 'debt', 'equity', 'plan', 'direct', 'regular', 'growth', 'option']);
   const SCHEME_TOPICS = new Set(['expense_ratio', 'exit_load', 'minimum_investment', 'lock_in', 'riskometer_benchmark', 'fund_manager', 'tax_benefit', 'overview', 'documents']);
   // When the user asks a concept question ("what is X?"), map the detected topic to its SEBI/AMFI explainer chunk
-  const CONCEPT_OF = { expense_ratio: 'concept_expense_ratio', exit_load: 'concept_exit_load', riskometer_benchmark: 'concept_riskometer', lock_in: 'concept_elss', tax_benefit: 'concept_elss', howto_statement: 'howto_statement', howto_capital_gains: 'howto_capital_gains' };
+  const CONCEPT_OF = { concept_mf: 'concept_mf', expense_ratio: 'concept_expense_ratio', exit_load: 'concept_exit_load', riskometer_benchmark: 'concept_riskometer', lock_in: 'concept_elss', tax_benefit: 'concept_elss', howto_statement: 'howto_statement', howto_capital_gains: 'howto_capital_gains' };
 
   function detectSchemes(q) {
     const found = [];
@@ -80,6 +92,7 @@
         if (q.includes(kw)) scores[topic] = (scores[topic] || 0) + (kw.length > 5 ? 2 : 1);
       }
     }
+    if (/\b(invest|sip|start|put|begin)\b[^.?]{0,25}\b(₹|rs\.?|inr)?\s?\d{2,7}\b|\b\d{2,7}\b[^.?]{0,25}\b(sip|invest|lumpsum|per month)\b|\bcan i invest\b/.test(q)) scores.minimum_investment = (scores.minimum_investment || 0) + 3;
     // Disambiguation: "risk" alone inside "riskometer" already counted; "index" in "index fund" not relevant here.
     return Object.entries(scores).sort((a, b) => b[1] - a[1]).map(([t]) => t);
   }
@@ -133,7 +146,8 @@
   function retrieve(question, ents, k = 3) {
     const qTokens = tokenize(question);
     const scored = DOCS.map(d => {
-      let score = bm25(qTokens, d);
+      const raw = bm25(qTokens, d);
+      let score = raw;
       // Entity boosts (this is what makes a tiny corpus feel precise)
       if (ents.schemes.length) {
         if (d.scheme && ents.schemes.includes(d.scheme)) score += 4;
@@ -143,11 +157,11 @@
         score -= 3;                                  // "what is expense ratio" → prefer concept chunks
       }
       if (ents.topics.length) {
-        if (d.topic === ents.topics[0]) score += 3;
+        if (d.topic === ents.topics[0]) score += (d.scheme && ents.schemes.includes(d.scheme)) ? 8 : 3;  // named scheme + named topic → that chunk wins
         else if (ents.isConcept && CONCEPT_OF[ents.topics[0]] === d.topic) score += 4;
         else if (ents.topics.includes(d.topic)) score += 1;
       }
-      return { doc: d, score: Math.round(score * 100) / 100 };
+      return { doc: d, score: Math.round(score * 100) / 100, raw: Math.round(raw * 100) / 100 };
     }).sort((a, b) => b.score - a.score);
     return scored.slice(0, k);
   }
@@ -186,6 +200,45 @@
       answer: `I couldn't find that fact in my verified sources, so I'd rather not guess. Try one of the questions below, or rephrase with the scheme name and the specific fact you need (expense ratio, exit load, minimum SIP, lock-in, riskometer, benchmark, statements).`,
       citation: null, chips: ['Minimum SIP of HDFC Liquid Fund', 'Lock-in of HDFC ELSS Tax Saver Fund', 'What is a Consolidated Account Statement?'],
     };
+    if (kind === 'help') return {
+      intent: 'greeting',
+      answer: `I'm Pramaan, a facts-only helper for five HDFC Mutual Fund schemes — Flexi Cap, Large Cap, ELSS Tax Saver, Balanced Advantage and Liquid. Ask about expense ratio, exit load, minimum SIP, lock-in, riskometer, benchmark, fund manager, or how to get statements, and I'll answer from official HDFC AMC, SEBI and AMFI pages with a source link. I don't give advice, returns or live NAVs, and I never take personal details.`,
+      citation: null, chips: ['Expense ratio of HDFC Flexi Cap Fund', 'Which scheme has the lowest expense ratio?', 'How to download my account statement?'],
+    };
+    if (kind === 'farewell') return {
+      intent: 'greeting',
+      answer: `Goodbye! Remember to verify any fact on the linked official page before acting on it — details like expense ratio change over time.`,
+      citation: null, chips: ['Expense ratio of HDFC Flexi Cap Fund', 'ELSS lock-in period?'],
+    };
+    if (kind === 'live_data') return {
+      intent: 'live_data',
+      answer: `NAV and AUM change every business day, so I don't hold live values and won't quote a stale one. ${ents && ents.scheme ? `Today's NAV for ${SCHEMES[ents.scheme].name} is published on its official scheme page linked below.` : `Today's NAV for any scheme is published on the official HDFC Mutual Fund scheme page or in the monthly factsheet linked below.`}`,
+      citation: ents && ents.scheme ? { label: `HDFC AMC — ${SCHEMES[ents.scheme].name}`, url: FACTS[ents.scheme].url } : EDUCATIONAL_LINKS.performance,
+      chips: ents && ents.scheme ? [`Expense ratio of ${SCHEMES[ents.scheme].name}`, `Exit load of ${SCHEMES[ents.scheme].name}`] : ['Expense ratio of HDFC Flexi Cap Fund', 'What is NAV?'],
+    };
+    if (kind === 'account') return {
+      intent: 'out_of_scope',
+      answer: `I don't have access to anyone's account, so I can't see your balance, holdings or SIPs. You can get them yourself from a Consolidated Account Statement on the HDFC Mutual Fund site (please don't type your PAN or folio here).`,
+      citation: { label: 'HDFC AMC — Consolidated Account Statement', url: URLS.cas_hdfc },
+      chips: ['How to download my account statement?', 'How to get a capital gains statement?'],
+    };
+    if (kind === 'complaint') return {
+      intent: 'out_of_scope',
+      answer: `Sorry to hear that. I can't see accounts or explain market moves, and I'm not the right place for a complaint — for a grievance about a scheme, contact HDFC Mutual Fund's investor services first, and escalate to SEBI's SCORES portal if it isn't resolved. I'm happy to look up any published fact about a scheme for you.`,
+      citation: ents && ents.scheme ? { label: `HDFC AMC — ${SCHEMES[ents.scheme].name}`, url: FACTS[ents.scheme].url } : null,
+      chips: ['Riskometer of HDFC Flexi Cap Fund', 'What is a riskometer?', 'Exit load of HDFC Large Cap Fund'],
+    };
+    if (kind === 'groww') return {
+      intent: 'out_of_scope',
+      answer: `I can't help with Groww app steps, charges or account issues — I only hold scheme facts taken from official HDFC AMC, SEBI and AMFI pages. For anything about the Groww app itself, please use Groww's own help centre.`,
+      citation: null, chips: ['Minimum SIP of HDFC Flexi Cap Fund', 'Exit load of HDFC Liquid Fund', 'How to download capital gains statement?'],
+    };
+    if (kind === 'not_covered') return {
+      intent: 'not_found',
+      answer: `My verified sources don't cover that (taxation on redemption, IDCW/dividend options, NRI/KYC rules, STP/SWP, SIP changes, nominations and buy/sell steps are outside this prototype). ${ents && ents.scheme ? `The official page for ${SCHEMES[ents.scheme].name} linked below has the scheme documents where these are described.` : `The scheme's SID/KIM on the official HDFC Mutual Fund page describes these; I can tell you where to find the SID.`}`,
+      citation: ents && ents.scheme ? { label: `HDFC AMC — ${SCHEMES[ents.scheme].name}`, url: FACTS[ents.scheme].url } : null,
+      chips: ents && ents.scheme ? [`Exit load of ${SCHEMES[ents.scheme].name}`, `Lock-in of ${SCHEMES[ents.scheme].name}`] : ['Where can I find the SID of HDFC Flexi Cap Fund?', 'What is exit load?'],
+    };
     if (kind === 'greeting') return {
       intent: 'greeting',
       answer: `Hello! Ask me anything factual about five HDFC Mutual Fund schemes — expense ratio, exit load, minimum SIP, lock-in, riskometer, benchmark or statements. I answer from official sources and link to them.`,
@@ -216,10 +269,17 @@
     if (pii) return finish(refuse('pii'), trace, [], ctx);
 
     // 2. Intent
+    if (!raw || HELP_RE.test(raw)) { trace.push({ step: 'Question type', result: 'Asking what I can do' }); return finish(refuse('help'), trace, [], ctx); }
+    if (FAREWELL_RE.test(raw)) { trace.push({ step: 'Question type', result: 'Goodbye' }); return finish(refuse('farewell'), trace, [], ctx); }
     if (GREETING_RE.test(raw)) { trace.push({ step: 'Question type', result: 'Greeting' }); return finish(refuse('greeting'), trace, [], ctx); }
+    if (GROWW_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ About the Groww app, not a scheme fact — declined' }); return finish(refuse('groww'), trace, [], ctx); }
     if (OTHER_AMC_RE.test(q) || OFF_TOPIC_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ Outside the covered schemes — declined' }); return finish(refuse('out_of_scope'), trace, [], ctx); }
     if (ADVICE_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ Asks for advice or an opinion — declined' }); return finish(refuse('advice'), trace, [], ctx); }
     if (PERFORMANCE_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ Asks about returns or rankings — declined, factsheet linked' }); return finish(refuse('performance'), trace, [], ctx); }
+    if (ACCOUNT_RE.test(q) && !/\b(statement|cas|capital gain)/.test(q)) { trace.push({ step: 'Question type', result: '❌ About a personal account — I have no access, pointing to the statement' }); return finish(refuse('account'), trace, [], ctx); }
+    if (COMPLAINT_RE.test(q)) { const sc = detectSchemes(q); trace.push({ step: 'Question type', result: 'A complaint or frustration — acknowledging, no facts to look up' }); return finish(refuse('complaint', { scheme: sc[0] || null }), trace, [], ctx); }
+    if (LIVE_DATA_RE.test(q) || (NAV_RE.test(q) && detectSchemes(q).length && !CONCEPT_RE.test(q))) { const sc = detectSchemes(q); trace.push({ step: 'Question type', result: '❌ Asks for live NAV/AUM — I only hold verified facts, linking the official page' }); return finish(refuse('live_data', { scheme: sc[0] || ctx.lastScheme || null }), trace, [], ctx); }
+    if (NOT_COVERED_RE.test(q)) { const sc = detectSchemes(q); trace.push({ step: 'Question type', result: '❌ Topic not in my sources — saying so instead of guessing' }); return finish(refuse('not_covered', { scheme: sc[0] || null }), trace, [], ctx); }
     trace.push({ step: 'Question type', result: '✅ Factual question' });
 
     // 3. Entities
@@ -229,8 +289,20 @@
     let isConcept = CONCEPT_RE.test(q) && schemes.length === 0;
     // "direct vs regular" without a scheme is a concept question about plan types
     if (!schemes.length && /\bdirect\b/.test(q) && /\bregular\b/.test(q)) { topics = ['concept_plans', ...topics.filter(t => t !== 'concept_plans')]; isConcept = true; }
-    // "What is HDFC Liquid Fund?" → scheme named, no specific fact asked → overview
-    if (schemes.length && !topics.length && CONCEPT_RE.test(q)) topics = ['overview'];
+    // "What is HDFC Liquid Fund?" / just "hdfc flexi cap fund" → scheme named, no specific fact asked → overview
+    const residual = schemes.length ? tokenize(q).filter(t => !SCHEME_TOKENS.has(t)) : [];
+    const FOLLOWUP_RE = /\b(its|it|same|that|this|also|and|what about|how about|for|of)\b|\?$/;
+    // Follow-ups that name only a scheme ("and for ELSS?") inherit the topic just discussed
+    if (schemes.length && !topics.length && !ctx.pendingTopic && ctx.lastTopic && SCHEME_TOPICS.has(ctx.lastTopic) && residual.length <= 3 && FOLLOWUP_RE.test(q) && !CONCEPT_RE.test(q)) {
+      topics = [ctx.lastTopic];
+      trace.push({ step: 'From earlier', result: `✅ Still about ${humanTopic(ctx.lastTopic).toLowerCase()}` });
+    }
+    // "direct plan?" right after an expense-ratio answer → same scheme, same topic, Direct-plan citation
+    if (!schemes.length && (!topics.length || topics[0] === 'concept_plans') && plan && !(/\bdirect\b/.test(q) && /\bregular\b/.test(q)) && ctx.lastScheme && ctx.lastTopic === 'expense_ratio' && tokenize(q).every(t => SCHEME_TOKENS.has(t))) {
+      schemes = [ctx.lastScheme]; topics = [ctx.lastTopic && SCHEME_TOPICS.has(ctx.lastTopic) ? ctx.lastTopic : 'expense_ratio'];
+      trace.push({ step: 'From earlier', result: `✅ ${plan[0].toUpperCase() + plan.slice(1)} plan of ${SCHEMES[ctx.lastScheme].name}` });
+    }
+    if (schemes.length && !topics.length && !ctx.pendingTopic && (CONCEPT_RE.test(q) || residual.length === 0)) topics = ['overview'];
 
     // Conversation memory: follow-ups like "and its exit load?"
     if (!schemes.length && ctx.lastScheme && topics.length && SCHEME_TOPICS.has(topics[0]) && !isConcept && /\b(its|it|same|that|this|also|and|what about)\b/.test(q)) {
@@ -250,10 +322,24 @@
       trace.push({ step: 'Answer', result: `✅ Side-by-side of official facts for ${schemes.length} schemes` });
       return finish({
         intent: 'compare',
-        answer: `Here are the official facts for ${schemes.map(k => SCHEMES[k].name).join(' and ')} side by side. Each column links to that scheme's page; this compares facts, not performance.`,
+        answer: `Here are the official facts for ${listNames(schemes)} side by side. Each column links to that scheme's page; this compares facts, not performance.`,
         citation: { label: `HDFC AMC — ${SCHEMES[schemes[0]].name}`, url: FACTS[schemes[0]].url },
-        compare: { schemes: schemes.slice(0, 3), keys, rows: keys.map(k => ({ key: k, label: FACT_LABELS[k], values: schemes.slice(0, 3).map(sk => k === 'risk' ? RISK_LEVELS[FACTS[sk].risk - 1] : FACTS[sk][k]) })), sources: schemes.slice(0, 3).map(sk => FACTS[sk].url) },
+        compare: { schemes: schemes.slice(0, 5), keys, rows: keys.map(k => ({ key: k, label: FACT_LABELS[k], values: schemes.slice(0, 5).map(sk => k === 'risk' ? RISK_LEVELS[FACTS[sk].risk - 1] : FACTS[sk][k]) })), sources: schemes.slice(0, 5).map(sk => FACTS[sk].url) },
         chips: schemes.slice(0, 2).map(k => `Overview of ${SCHEMES[k].name}`),
+      }, trace, [], ctx);
+    }
+
+    // "Which scheme has the lowest expense ratio?" → factual side-by-side of all five (never performance)
+    if (!schemes.length && topics.length && TOPIC_FACTS[topics[0]] && topics[0] !== 'overview' && !isConcept && SUPERLATIVE_RE.test(q)) {
+      const all = Object.keys(SCHEMES), keys = TOPIC_FACTS[topics[0]];
+      ctx.pendingTopic = null;
+      trace.push({ step: 'Answer', result: `✅ ${humanTopic(topics[0])} of all five schemes side by side, from each official page` });
+      return finish({
+        intent: 'compare',
+        answer: `Here is the ${humanTopic(topics[0]).toLowerCase()} of all five covered HDFC schemes side by side, each taken from its official scheme page. This compares published facts only — not performance — and a lower or higher figure is not a recommendation.`,
+        citation: { label: 'HDFC AMC — scheme pages', url: FACTS[all[0]].url },
+        compare: { schemes: all, keys, rows: keys.map(k => ({ key: k, label: FACT_LABELS[k], values: all.map(sk => k === 'risk' ? RISK_LEVELS[FACTS[sk].risk - 1] : FACTS[sk][k]) })), sources: all.map(sk => FACTS[sk].url) },
+        chips: ['Expense ratio of HDFC Liquid Fund', 'Exit load of HDFC Balanced Advantage Fund', 'What is expense ratio?'],
       }, trace, [], ctx);
     }
 
@@ -270,10 +356,13 @@
     const hits = retrieve(raw, ents, 3);
     trace.push({ step: 'Best matching sources', result: hits.filter(h => h.score > 0).map(h => describe(h.doc)).join(' · ') || 'No close match' });
     const top = hits[0];
-    const THRESHOLD = 2.5;
-    if (!top || top.score < THRESHOLD) {
+    const THRESHOLD = (!schemes.length && !topics.length) ? 6 : 2.5;   // no scheme, no topic → must match strongly
+    const weakForScheme = schemes.length && !topics.length && top && top.raw < 3 && residual.length > 0; // "STP hdfc flexi cap" → don't answer something else
+    if (!top || top.score < THRESHOLD || weakForScheme) {
       trace.push({ step: 'Answer', result: '❌ No source matched closely enough — not guessing' });
-      return finish(refuse('not_found'), trace, hits, ctx);
+      const nf = refuse('not_found');
+      if (schemes.length) { nf.chips = ['expense_ratio', 'exit_load', 'minimum_investment'].map(t => `${humanTopic(t)} of ${SCHEMES[schemes[0]].name}`); ctx.lastScheme = schemes[0]; }
+      return finish(nf, trace, hits, ctx);
     }
 
     // 5. Ground the answer
@@ -281,6 +370,7 @@
     if (plan === 'direct' && top.doc.scheme && URLS[top.doc.scheme + '_dir'] && top.doc.topic !== 'documents') url = URLS[top.doc.scheme + '_dir'];
     const citation = { label: `${top.doc.org} — ${top.doc.scheme ? SCHEMES[top.doc.scheme].name : humanOrgPage(top.doc)}`, url };
     if (top.doc.scheme) ctx.lastScheme = top.doc.scheme;
+    ctx.lastTopic = top.doc.topic;
 
     // Follow-up suggestions: other schemes for the same topic, or other topics for the same scheme
     const chips = [];
@@ -302,6 +392,7 @@
     return finish({ intent: 'fact', answer: top.doc.answer, citation, chips, chunk: top.doc, scheme: top.doc.scheme, highlights }, trace, hits, ctx);
   }
 
+  function listNames(keys) { const n = keys.map(k => SCHEMES[k].name); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0]; }
   function describe(doc) { return doc.scheme ? `${SCHEMES[doc.scheme].name} — ${humanTopic(doc.topic)}` : `${doc.org} — ${humanOrgPage(doc)}`; }
   function humanOrgPage(doc) {
     return ({ concept_expense_ratio: 'Expense Ratio explainer', concept_exit_load: 'Exit Load explainer', concept_riskometer: 'Riskometer', concept_plans: 'Direct vs Regular Plan', concept_elss: 'ELSS guide', concept_mf: 'Understanding Mutual Funds', howto_statement: 'Account Statement', howto_capital_gains: 'Capital Gains Statement', howto_factsheet: 'Factsheets' })[doc.topic] || 'Source page';
