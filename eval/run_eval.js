@@ -17,9 +17,9 @@ const CASES = [
   { q: 'Exit load of HDFC Large Cap Fund?', expect: 'fact', chunk: 'large-exit', sample: true },
   { q: 'What is the lock-in period for HDFC ELSS Tax Saver Fund?', expect: 'fact', chunk: 'elss-lockin', sample: true },
   { q: 'Minimum SIP for HDFC Liquid Fund', expect: 'fact', chunk: 'liquid-min', sample: true },
-  { q: 'Riskometer and benchmark of HDFC Balanced Advantage Fund', expect: 'fact', chunk: 'baf-risk-bench', sample: true },
+  { q: 'Riskometer and benchmark of HDFC Balanced Advantage Fund', expect: 'fact', chunk: 'baf-risk-bench' },
   { q: 'How do I download my capital gains statement?', expect: 'fact', chunk: 'howto-capgains', sample: true },
-  { q: 'What is a riskometer?', expect: 'fact', chunk: 'concept-riskometer', sample: true },
+  { q: 'What is a riskometer?', expect: 'fact', chunk: 'concept-riskometer' },
   { q: 'Difference between direct and regular plan', expect: 'fact', chunk: 'concept-direct-regular' },
   { q: 'Expense ratio of HDFC Flexi Cap direct plan', expect: 'fact', chunk: 'flexi-ter' },
   { q: 'Who manages HDFC Large Cap Fund and what is its AUM?', expect: 'fact', chunk: 'large-manager' },
@@ -53,6 +53,34 @@ const CASES = [
   { q: 'weather in mumbai', expect: 'not_found' },
   { q: 'minimum sip', expect: 'clarify' },
   { q: 'hi', expect: 'greeting' },
+
+  // ── Round 2 (27 Sep 2026): situations found by probing 100 realistic phrasings ──
+  { q: 'How much do I need to start a SIP in HDFC Large Cap Fund?', expect: 'fact', chunk: 'large-min' },   // was wrongly refused as advice
+  { q: 'can I invest 500 in hdfc flexi cap', expect: 'fact', chunk: 'flexi-min' },
+  { q: 'Is HDFC ELSS Tax Saver a good fund?', expect: 'refuse_advice' },                                     // was answered as a fact
+  { q: 'hdfc flexi cap fund', expect: 'fact', chunk: 'flexi-overview' },                                     // bare scheme name → overview
+  { q: 'hdfc equity fund expense ratio', expect: 'fact', chunk: 'flexi-ter' },                               // old scheme name alias
+  { q: 'how much tax can I save with ELSS', expect: 'fact', chunk: 'elss-tax' },
+  { q: 'what is SIP', expect: 'fact', chunk: 'concept-sip' },
+  { q: 'what is NAV', expect: 'fact', chunk: 'concept-nav' },
+  { q: 'what is a mutual fund', expect: 'fact', chunk: 'concept-mf' },
+  { q: 'Which HDFC scheme has the lowest expense ratio?', expect: 'compare', sample: true },                 // factual superlative → all-scheme table
+  { q: 'NAV of HDFC Flexi Cap today', expect: 'live_data', sample: true },                                   // live data → link, never a stale number
+  { q: 'ltcg on hdfc flexi cap', expect: 'not_found' },                                                      // topic not in corpus → honest
+  { q: 'STP hdfc flexi cap', expect: 'not_found' },
+  { q: 'Can NRI invest in HDFC Flexi Cap?', expect: 'not_found' },
+  { q: 'what is IDCW', expect: 'not_found' },
+  { q: 'how to buy hdfc flexi cap on groww', expect: 'out_of_scope' },                                       // Groww app questions
+  { q: 'what is my balance', expect: 'out_of_scope' },                                                       // account access → CAS link
+  { q: 'I lost money in hdfc flexi cap', expect: 'out_of_scope' },                                           // complaint handled gracefully
+  { q: 'what can you do', expect: 'greeting' },
+  { q: 'who built you', expect: 'greeting' },
+  { q: 'ok bye', expect: 'greeting' },
+  { q: '', expect: 'greeting' },
+  { q: '1+1', expect: 'not_found' },
+  { q: 'tell me a joke', expect: 'not_found' },
+  { q: 'how do i get my account statement', expect: 'fact', chunk: 'howto-cas-hdfc' },
+  { q: 'hdfc flexi cap ka expense ratio kya hai', expect: 'fact', chunk: 'flexi-ter' },                      // Hinglish with English keywords
 ];
 
 let pass = 0, fail = 0;
@@ -75,6 +103,17 @@ for (const c of CASES) {
   ok ? pass++ : fail++;
   console.log(`${ok ? '✅' : '❌'} follow-up "and its exit load?" inherits scheme → ${r.retrieved[0].id}`);
 }
+// Multi-turn: pending topic → scheme chip, topic carry-over, plan follow-up
+{
+  let c = {}; const step = (q, want, id) => { const r = E.ask(q, c); c = r.context; const ok = r.intent === want && (!id || (r.retrieved[0] && r.retrieved[0].id === id)); ok ? pass++ : fail++; console.log(`${ok ? '✅' : '❌'} multi-turn "${q}" → ${r.intent}${r.retrieved[0] ? ' · ' + r.retrieved[0].id : ''}${ok ? '' : `   EXPECTED ${want}${id ? ' / ' + id : ''}`}`); return r; };
+  step('minimum sip', 'clarify');
+  step('HDFC Large Cap Fund', 'fact', 'large-min');
+  step('and for elss?', 'fact', 'elss-min');
+  step('what about its exit load', 'fact', 'elss-exit');
+  step('Expense ratio of HDFC Liquid Fund', 'fact', 'liquid-ter');
+  const d = step('direct plan?', 'fact', 'liquid-ter');
+  if (!/\/direct$/.test(d.citation.url)) { fail++; console.log('❌ direct-plan follow-up should cite the Direct plan page'); }
+}
 // Every fact answer must have exactly one citation and ≤3 sentences
 for (const ch of E.CHUNKS) {
   const sentences = ch.answer.replace(/\b(Mr|Ms|Mrs|Dr)\./g, '$1').split(/(?<=[.!?])\s+(?=[A-Z₹"])/).length;
@@ -96,6 +135,7 @@ if (process.argv.includes('--write')) {
       '',
       `> ${r.answer}`,
       '',
+      ...(r.compare ? [`| | ${r.compare.schemes.map(k => E.SCHEMES[k].name).join(' | ')} |`, `|---|${r.compare.schemes.map(() => '---').join('|')}|`, ...r.compare.rows.map(row => `| ${row.label} | ${row.values.join(' | ')} |`), ''] : []),
       r.citation ? `**Source:** [${r.citation.label}](${r.citation.url})  ` : '**Source:** — (guardrail response, no retrieval)  ',
       `*${r.stamp}*`,
       '',
