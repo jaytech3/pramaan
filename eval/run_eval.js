@@ -50,7 +50,7 @@ const CASES = [
   // ── Scope ──
   { q: 'Expense ratio of SBI Bluechip Fund', expect: 'out_of_scope' },
   { q: 'Which stock should I buy today?', expect: 'out_of_scope' },
-  { q: 'weather in mumbai', expect: 'not_found' },
+  { q: 'weather in mumbai', expect: 'smalltalk' },                                                        // off-topic chit-chat → friendly redirect
   { q: 'minimum sip', expect: 'clarify' },
   { q: 'hi', expect: 'greeting' },
 
@@ -77,10 +77,40 @@ const CASES = [
   { q: 'who built you', expect: 'greeting' },
   { q: 'ok bye', expect: 'greeting' },
   { q: '', expect: 'greeting' },
-  { q: '1+1', expect: 'not_found' },
-  { q: 'tell me a joke', expect: 'not_found' },
+  { q: '1+1', expect: 'smalltalk' },
+  { q: 'tell me a joke', expect: 'smalltalk' },
   { q: 'how do i get my account statement', expect: 'fact', chunk: 'howto-cas-hdfc' },
   { q: 'hdfc flexi cap ka expense ratio kya hai', expect: 'fact', chunk: 'flexi-ter' },                      // Hinglish with English keywords
+
+  // ── Round 3 (28 Sep 2026): small talk & unclear input — never "Not in my sources" for a human pleasantry ──
+  { q: 'how are you?', expect: 'smalltalk', sample: true },
+  { q: 'hello how are you', expect: 'smalltalk' },
+  { q: 'kaise ho', expect: 'smalltalk' },
+  { q: 'what is your name', expect: 'smalltalk' },
+  { q: 'are you a bot?', expect: 'greeting' },      // identity → the 'what I can do' card
+  { q: 'thank you so much', expect: 'smalltalk' },
+  { q: 'ok thanks', expect: 'smalltalk' },
+  { q: 'you are great', expect: 'smalltalk' },
+  { q: 'ok', expect: 'smalltalk' },
+  { q: 'hmm', expect: 'smalltalk' },
+  { q: 'lol', expect: 'smalltalk' },
+  { q: '🙂', expect: 'smalltalk' },
+  { q: 'can you speak hindi', expect: 'smalltalk' },
+  { q: 'what is the capital of india', expect: 'smalltalk' },
+  { q: 'who is virat kohli', expect: 'smalltalk' },
+  { q: 'what is 2+2', expect: 'smalltalk' },
+  { q: 'write a poem', expect: 'smalltalk' },
+  { q: 'I am confused', expect: 'smalltalk' },
+  { q: 'hey pramaan', expect: 'greeting' },
+  { q: 'good morning', expect: 'greeting' },
+  { q: 'whats up', expect: 'greeting' },
+  { q: 'asdfgh', expect: 'unclear', sample: true },
+  { q: '???', expect: 'unclear' },
+  // …and small-talk words inside real questions must NOT be swallowed
+  { q: 'how are you calculating the expense ratio', expect: 'clarify' },
+  { q: 'inception date of hdfc large cap', expect: 'fact', chunk: 'large-manager' },
+  { q: 'risk score of hdfc elss', expect: 'fact', chunk: 'elss-risk' },
+  { q: 'im new to mutual funds', expect: 'fact', chunk: 'concept-mf' },
 ];
 
 let pass = 0, fail = 0;
