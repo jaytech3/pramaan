@@ -52,4 +52,5 @@ The fallback is always the extractive answer, so a bad generation can never reac
 - **Escape hatch token** (`NOT_IN_SOURCES`) — gives the model a graceful way to refuse instead of inventing a fact; the UI treats it as "not found".
 - **Citation as a structural requirement** (`[1]`) — easy to parse, easy to validate, and mirrors the brief's "one clear citation link in every answer".
 - **Temperature 0, 200 max tokens** — factual rephrasing does not benefit from creativity; the token cap enforces brevity even if the model ignores rule 2.
+- **Small talk never reaches the model** — "how are you?", thanks, jokes, weather and other chit-chat are recognised by the intent gate (`SMALLTALK` in `engine.js`) and answered with fixed in-character replies before retrieval, so the LLM is only ever asked to rephrase a retrieved fact.
 - **Safe-refusal wording lives in code, not in the prompt** — refusals (advice, returns, PII) are decided *before* the model is called, so they are identical in both modes and cannot be jail-broken through the LLM.
