@@ -37,7 +37,22 @@
   const PERFORMANCE_RE = /\b(return|returns|cagr|xirr|performance|performing|perform|growth rate|how much (will|would) (i|it)|profit|gain(s)? (will|would)|predict|forecast|outlook|target|nav (will|forecast|prediction|tomorrow|next)|beat|outperform|underperform|ranking|rank|rating|star|compare returns|1 ?year return|3 ?year return|5 ?year return|10 ?year return)\b/i;
   const OTHER_AMC_RE = /\b(sbi|axis|icici|nippon|mirae|kotak|parag parikh|ppfas|quant|motilal|uti|tata|aditya birla|absl|dsp|franklin|invesco|canara|sundaram|edelweiss|bandhan|whiteoak|zerodha|navi|360 one|bajaj finserv|helios|samco|jm financial|lic mf|pgim|union mf|mahindra manulife|baroda bnp|hsbc|trust mf|itI mf|shriram|taurus|nj mutual|old bridge|angel one|groww (mutual fund|mf|nifty|elss|liquid|large)|indiabulls)\b/i;
   const OFF_TOPIC_RE = /\b(stock|share price|crypto|bitcoin|fixed deposit|fd rate|ppf|nps|gold|real estate|insurance|ulip|loan|credit card|demat|ipo|nifty (today|level|prediction)|sensex)\b/i;
-  const GREETING_RE = /^\s*(hi|hello|hey|namaste|hola|good (morning|afternoon|evening)|thanks?|thank you|ok|okay|cool|great)\b[\s!.]*$/i;
+  const GREETING_RE = /^\s*(hi+|hello+|hey+|heya|hii+|yo|namaste|namaskar|hola|good (morning|afternoon|evening|day)|greetings|sup|wassup|what'?s up)\b[\s!.,]*(there|pramaan|bot|everyone)?[\s!.,]*$/i;
+
+  // ── Small talk (W1: be a graceful conversationalist without leaving the facts-only lane) ──
+  // Each entry: a pattern + a response kind. Checked only when no scheme/topic entity is present,
+  // so "how are you calculating the expense ratio?" still reaches retrieval.
+  const SMALLTALK = [
+    { kind: 'wellbeing',  re: /\b(how (are|r) (you|u|things)|how('?s| is) (it going|everything|life|your day|the day|ur day)|how (do|are) you (do|doing|feel|feeling)|you (ok|okay|good|fine|alright)\?*$|kaise ho|kaisi ho|kya haal|kem cho|how you doing|hows it going|whats going on|how have you been|are you (fine|good|ok|okay|well|alive|there|awake))\b/i },
+    { kind: 'identity',   re: /\b(what('?s| is) (your|ur) name|who are you|your name|are you (a )?(real|human|person|robot|bot|ai|chatgpt|gpt|gemini|alexa|siri)|what are you|are you real|which (model|ai|llm)|what language model|introduce yourself|tell me about yourself)\b/i },
+    { kind: 'thanks',     re: /^\s*(ok(ay)?[,!.\s]*)?(thanks?( you| u)?( so much| a lot| a ton| very much)?|thx|ty|tysm|thankyou|thank u|dhanyavaad|dhanyawad|shukriya|much appreciated|appreciate it|great help|that helps|helpful|got it,? thanks|perfect,? thanks|cheers)\b[\s!.,]*(pramaan|bot|bro|dear|buddy|friend)?[\s!.,]*$/i },
+    { kind: 'compliment', re: /^\s*(you('?re| are) (great|awesome|amazing|the best|good|smart|helpful|cool|nice|brilliant|fantastic)|(good|great|nice|excellent|well done|awesome|amazing|brilliant|super|fantastic)( job| work| bot| answer| stuff)?|i (love|like) (you|this|it)|love (it|this|you)|impressive|wow|well done|bravo|nailed it|good bot|smart bot|nice bot|nice one)\b[\s!.,]*$/i },
+    { kind: 'ack',        re: /^\s*(ok(ay|k|ie)?|k|kk|fine|alright|sure|cool|noted|got it|i see|hmm+|hm+|oh+|ah+|uh+|umm+|right|yes|yeah|yep|yup|ya|no|nope|nah|haha+|hahaha|lol|lmao|rofl|hehe+|😂|😀|😊|🙂|👍|👌|🙏|❤️|🔥|💯|✅|👋)[\s!.,👍🙏😂😀😊🙂👌❤️🔥💯✅👋]*$/iu },
+    { kind: 'language',   re: /\b((can|do) you (speak|understand|know|reply in|answer in|talk in|talk|respond in)|(speak|reply|answer|talk|respond|explain) (in|to me in)|hindi me|hindi mein|marathi (me|mein)|tamil (me|mein))\s*(hindi|marathi|tamil|telugu|gujarati|kannada|bengali|malayalam|punjabi|urdu|hinglish|english)?\b|\b(hindi|marathi|tamil|telugu|gujarati|kannada|bengali|malayalam|punjabi|urdu)\b.{0,15}\b(speak|reply|answer|talk|support|language|please|bolo|batao)\b/i },
+    { kind: 'offtopic',   re: /\b(joke|jokes|funny|riddle|poem|poetry|story|song|sing|rap|shayari|dance|game|play (a )?game|weather|temperature|rain|forecast|what time|what date|what day|today'?s date|date today|time is it|time now|news|headlines|cricket|ipl|virat|dhoni|kohli|sachin|movie|movies|film|netflix|recipe|cook|pizza|biryani|capital of|prime minister|president|who is (the )?(pm|ceo|founder)|population|distance|translate|meaning of life|horoscope|zodiac|astrology|lottery|bitcoin price|gold price|dollar rate|exchange rate|write (me )?(a|an|some)|essay|homework|python|javascript|code|program|resume|cv|birthday|festival|diwali|holi|christmas|eid|wish me|what('?s| is) \d+\s*[-+*x\/]\s*\d+|\d+\s*[-+*x\/]\s*\d+\s*=?\s*\??$|calculate \d|maths?|square root|sqrt|percentage of \d)\b/i },
+    { kind: 'feelings',   re: /\b(i('?m| am) (bored|sad|happy|tired|confused|scared|worried|stressed|angry|lonely|excited|new to this|a beginner|new to mutual funds|new to investing)|i (don'?t|do not) (understand|get it|know anything)|i feel (lost|confused)|confused|explain like i'?m|eli5)\b/i },
+  ];
+  const UNCLEAR_MAX_TOKENS = 3;
   const CONCEPT_RE = /\b(what is|what's|whats|what does|what are|meaning|means?|mean by|define|definition|explain|difference between|how does .* work|why (is|do|does)|how (do|can|to) (i )?(check|find|see|know|get|download|request)|where (to|can i|do i) (check|find|see|get|download))\b/i;
 
   const HELP_RE = /\b(what can you (do|help|answer)|how (can|do) you help|who (are|built|made|created|trained) you|what are you|are you (a )?(bot|human|ai)|which (amc|amcs|schemes?|funds?) (do|can) you (cover|know|support|answer)|what do you (cover|know)|help me|about you|your (capabilities|features|sources))\b|^\s*(help|menu|start|options)\s*[?!.]*$/i;
@@ -244,6 +259,53 @@
       answer: `Hello! Ask me anything factual about five HDFC Mutual Fund schemes — expense ratio, exit load, minimum SIP, lock-in, riskometer, benchmark or statements. I answer from official sources and link to them.`,
       citation: null, chips: ['Expense ratio of HDFC Flexi Cap Fund', 'ELSS lock-in period?', 'How to download capital gains statement?'],
     };
+    // ── Small talk: short, warm, and always steer back to a fact question ──
+    const STARTERS = ['Expense ratio of HDFC Flexi Cap Fund', 'Lock-in of HDFC ELSS Tax Saver Fund', 'How to download my account statement?'];
+    if (kind === 'wellbeing') return {
+      intent: 'smalltalk',
+      answer: `I'm doing well, thanks for asking! I'm here whenever you want a verified fact about the five HDFC Mutual Fund schemes I cover — expense ratio, exit load, minimum SIP, lock-in, riskometer or statements. What can I look up for you?`,
+      citation: null, chips: STARTERS,
+    };
+    if (kind === 'identity') return {
+      intent: 'smalltalk',
+      answer: `I'm Pramaan — the name means "proof" in Hindi. I'm a facts-only assistant, not a person or an advisor: I answer questions about five HDFC Mutual Fund schemes using only official HDFC AMC, SEBI and AMFI pages, and every answer comes with its source link.`,
+      citation: null, chips: ['What can you do?', 'Expense ratio of HDFC Large Cap Fund', 'What is a riskometer?'],
+    };
+    if (kind === 'thanks') return {
+      intent: 'smalltalk',
+      answer: `You're welcome! Do double-check any figure on the linked official page before acting on it — expense ratios and AUM change over time. Anything else you'd like to look up?`,
+      citation: null, chips: ['Exit load of HDFC Liquid Fund', 'Minimum SIP of HDFC Balanced Advantage Fund', 'Direct vs regular plan difference'],
+    };
+    if (kind === 'compliment') return {
+      intent: 'smalltalk',
+      answer: `Thank you, that's kind! I only repeat what the official pages say, so the credit goes to HDFC AMC, SEBI and AMFI. Want another fact looked up?`,
+      citation: null, chips: STARTERS,
+    };
+    if (kind === 'ack') return {
+      intent: 'smalltalk',
+      answer: `Got it. Whenever you're ready, ask me a fact about any of the five HDFC schemes — or tap one of the suggestions below.`,
+      citation: null, chips: ents && ents.scheme ? [`Exit load of ${SCHEMES[ents.scheme].name}`, `Minimum SIP of ${SCHEMES[ents.scheme].name}`, `Riskometer & benchmark of ${SCHEMES[ents.scheme].name}`] : STARTERS,
+    };
+    if (kind === 'language') return {
+      intent: 'smalltalk',
+      answer: `I understand and reply in English only for now, though simple Hinglish works if the fact words are in English — for example "HDFC Flexi Cap ka expense ratio kya hai". Sorry for the limitation!`,
+      citation: null, chips: ['hdfc flexi cap ka expense ratio kya hai', 'ELSS lock-in period?', 'What is exit load?'],
+    };
+    if (kind === 'feelings') return {
+      intent: 'smalltalk',
+      answer: `That's completely fine — mutual fund jargon is confusing for most people at first. I can explain the basics in plain words (what a mutual fund, SIP, NAV, expense ratio or exit load is) or look up a specific fact about a scheme; I just can't tell you what to invest in.`,
+      citation: null, chips: ['What is a mutual fund?', 'What is SIP?', 'What is expense ratio?'],
+    };
+    if (kind === 'offtopic') return {
+      intent: 'smalltalk',
+      answer: `I'd love to help, but that's outside what I do — I'm a single-purpose assistant for facts about five HDFC Mutual Fund schemes and general mutual fund concepts, and I don't handle jokes, news, weather, maths or general questions. Ask me anything about expense ratio, exit load, minimum SIP, lock-in, riskometer or statements and I'll answer with a source link.`,
+      citation: null, chips: STARTERS,
+    };
+    if (kind === 'unclear') return {
+      intent: 'unclear',
+      answer: `Sorry, I didn't quite catch that. Could you rephrase — ideally with the scheme name and the fact you need (expense ratio, exit load, minimum SIP, lock-in, riskometer, benchmark or statements)? You can also tap a suggestion below.`,
+      citation: null, chips: ents && ents.scheme ? [`Expense ratio of ${SCHEMES[ents.scheme].name}`, `Exit load of ${SCHEMES[ents.scheme].name}`, 'What can you do?'] : ['What can you do?', 'Expense ratio of HDFC Flexi Cap Fund', 'What is a mutual fund?'],
+    };
     if (kind === 'clarify') return {
       intent: 'clarify',
       answer: `Happy to help — which scheme do you mean? I cover HDFC Flexi Cap, Large Cap, ELSS Tax Saver, Balanced Advantage and Liquid Fund. Tap one below.`,
@@ -272,6 +334,12 @@
     if (!raw || HELP_RE.test(raw)) { trace.push({ step: 'Question type', result: 'Asking what I can do' }); return finish(refuse('help'), trace, [], ctx); }
     if (FAREWELL_RE.test(raw)) { trace.push({ step: 'Question type', result: 'Goodbye' }); return finish(refuse('farewell'), trace, [], ctx); }
     if (GREETING_RE.test(raw)) { trace.push({ step: 'Question type', result: 'Greeting' }); return finish(refuse('greeting'), trace, [], ctx); }
+    // Small talk / chit-chat — only when the message carries no scheme or topic, so real questions are never swallowed
+    const hasEntity = detectSchemes(q).length > 0 || detectTopics(q).length > 0;
+    if (!hasEntity) {
+      const st = SMALLTALK.find(s => s.re.test(raw));
+      if (st) { trace.push({ step: 'Question type', result: `Small talk (${st.kind}) — replying briefly, no facts to look up` }); return finish(refuse(st.kind, { scheme: ctx.lastScheme || null }), trace, [], ctx); }
+    }
     if (GROWW_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ About the Groww app, not a scheme fact — declined' }); return finish(refuse('groww'), trace, [], ctx); }
     if (OTHER_AMC_RE.test(q) || OFF_TOPIC_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ Outside the covered schemes — declined' }); return finish(refuse('out_of_scope'), trace, [], ctx); }
     if (ADVICE_RE.test(q)) { trace.push({ step: 'Question type', result: '❌ Asks for advice or an opinion — declined' }); return finish(refuse('advice'), trace, [], ctx); }
@@ -350,6 +418,17 @@
       return finish(refuse('clarify', { topics }), trace, [], ctx);
     }
     ctx.pendingTopic = null;
+
+    // Gibberish / unrecognisable input ("asdfgh", "???", a lone emoji): nothing to retrieve, ask to rephrase instead of "not in my sources"
+    if (!schemes.length && !topics.length && !isConcept) {
+      const toks = tokenize(q);
+      const known = toks.filter(t => df[t]);
+      const alpha = raw.replace(/[^a-z]/gi, '');
+      if (!alpha.length || (toks.length <= UNCLEAR_MAX_TOKENS && known.length === 0)) {
+        trace.push({ step: 'Question type', result: '❓ Could not recognise a question — asking to rephrase' });
+        return finish(refuse('unclear', { scheme: ctx.lastScheme || null }), trace, [], ctx);
+      }
+    }
 
     // 4. Retrieve
     const ents = { schemes, plan, topics, isConcept };
