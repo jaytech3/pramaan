@@ -62,7 +62,7 @@
   const avatar = () => `<svg class="avatar" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="var(--teal)"/><path d="M18 33l9 9 19-20" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function addTyping() { const m = document.createElement('div'); m.className = 'msg bot'; m.innerHTML = `${avatar()}<div class="card"><div class="typing"><i></i><i></i><i></i></div></div>`; thread.appendChild(m); scrollDown(); return m; }
 
-  const KIND = { fact: ['Verified fact', 'fact'], compare: ['Factual comparison', 'fact'], refuse_advice: ['No advice — facts only', 'warn'], refuse_performance: ['No returns or rankings', 'warn'], refuse_pii: ['Personal data discarded', 'danger'], out_of_scope: ['Outside my sources', 'warn'], not_found: ['Not in my sources', 'warn'], live_data: ['Live data — see official page', 'warn'], clarify: ['Which scheme?', ''], greeting: ['Welcome', ''] };
+  const KIND = { fact: ['Verified fact', 'fact'], compare: ['Factual comparison', 'fact'], refuse_advice: ['No advice — facts only', 'warn'], refuse_performance: ['No returns or rankings', 'warn'], refuse_pii: ['Personal data discarded', 'danger'], out_of_scope: ['Outside my sources', 'warn'], not_found: ['Not in my sources', 'warn'], live_data: ['Live data — see official page', 'warn'], clarify: ['Which scheme?', ''], greeting: ['Welcome', ''], smalltalk: ['Just chatting', ''], unclear: ['Didn\'t catch that', ''] };
 
   async function addBot(res, viaLLM) {
     const m = document.createElement('div'); m.className = 'msg bot';
