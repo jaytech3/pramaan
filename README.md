@@ -40,7 +40,8 @@ Built for the NextLeap PM Fellowship — Milestone 4 (*AI System Design, LLMs & 
 flowchart LR
     U([User question]) --> P[1 · PII guard<br/>PAN · Aadhaar · phone · email · OTP · a/c no.]
     P -- PII found --> R1[Refuse & discard<br/>no citation]
-    P -- clean --> I[2 · Intent gate<br/>advice? returns? other AMC? greeting?]
+    P -- clean --> I[2 · Intent gate<br/>advice? returns? other AMC?<br/>greeting / small talk?]
+    I -- small talk / off-topic / unclear --> R0[Brief human reply<br/>+ steer back to a fact question]
     I -- advice --> R2[Polite facts-only refusal<br/>+ SEBI educational link]
     I -- returns --> R3[No performance claims<br/>+ link to official factsheet]
     I -- out of scope / Groww / live NAV / account / complaint --> R4[Explain coverage<br/>or point to the official page]
@@ -52,7 +53,7 @@ flowchart LR
     A -. optional, BYO key .-> L[LLM rephrase<br/>validated → else fallback]
 ```
 
-**W1 — Thinking like a model.** The first two stages decide *answer vs refuse* before any retrieval happens: personal data is discarded, opinion/performance questions are refused with an educational link, live-data requests (today's NAV) are redirected to the official page, account and complaint messages are handled without pretending to have access, and questions outside the five schemes — other AMCs, the Groww app, taxation, NRI/KYC, STP/SWP — are declined explicitly. Only clean, factual queries reach the corpus. The advice gate is deliberately narrow around *facts about investing*: "how much do I need to start a SIP?" and "can I invest ₹500?" are minimum-investment facts, while "is it a good fund?" and "should I choose direct?" are refused.
+**W1 — Thinking like a model.** The first two stages decide *answer vs refuse* before any retrieval happens: personal data is discarded, opinion/performance questions are refused with an educational link, live-data requests (today's NAV) are redirected to the official page, account and complaint messages are handled without pretending to have access, and questions outside the five schemes — other AMCs, the Groww app, taxation, NRI/KYC, STP/SWP — are declined explicitly. Human pleasantries are handled too: "how are you?", "what's your name?", "thanks!", "ok", "lol", a lone emoji, "can you speak Hindi?", "I'm confused", and off-topic asks (jokes, weather, cricket, maths, general knowledge) each get a short, warm, in-character reply that steers back to a fact question — never a cold "not in my sources". Gibberish ("asdfgh", "???") gets a "didn't catch that, could you rephrase?" with tap-to-ask chips. The small-talk gate runs only when the message contains no scheme or topic, so "how are you calculating the expense ratio?" still reaches retrieval. Only clean, factual queries reach the corpus. The advice gate is deliberately narrow around *facts about investing*: "how much do I need to start a SIP?" and "can I invest ₹500?" are minimum-investment facts, while "is it a good fund?" and "should I choose direct?" are refused.
 
 **W2 — LLMs & prompting.** The default answer is *extractive*: each chunk carries a hand-written ≤3-sentence answer taken from the source page, so the system is deterministic and cannot hallucinate. An optional LLM mode (bring your own Gemini/OpenAI key, stored in memory only) rephrases the retrieved facts under a strict system prompt with a `NOT_IN_SOURCES` escape hatch and a `[1]` citation requirement — and every generation is validated (≤3 sentences, no advice words, one citation) or the extractive answer is shown instead. See [prompts/system_prompt.md](prompts/system_prompt.md).
 
@@ -71,7 +72,7 @@ python3 -m http.server 8000      # or any static server
 # open http://localhost:8000
 ```
 
-Run the regression suite (65 cases: retrieval targets, refusals, PII, scope, live-data and account handling, a six-turn conversation, ≤3-sentence + official-domain checks on every chunk):
+Run the regression suite (92 cases: retrieval targets, refusals, PII, scope, live-data and account handling, small talk and unclear input, a six-turn conversation, ≤3-sentence + official-domain checks on every chunk):
 
 ```bash
 node eval/run_eval.js            # exit code 1 on any failure
@@ -91,7 +92,7 @@ Update a fact: edit the chunk in `corpus.js`, bump `UPDATED`, re-run the eval.
 | `sample_qa.md` | 10 sample queries with the assistant's exact answers and links (auto-generated) |
 | `prompts/system_prompt.md` | System prompt, user template, validation rules and the reasoning behind them |
 | `DISCLAIMER.md` | Disclaimer and refusal copy used in the UI |
-| `eval/run_eval.js` | Regression suite (65 cases incl. multi-turn) |
+| `eval/run_eval.js` | Regression suite (92 cases incl. small talk and multi-turn) |
 
 ## 6. Source list (25 official pages, verified 16 Sep 2026)
 
@@ -134,7 +135,7 @@ Update a fact: edit the chunk in `corpus.js`, bump `UPDATED`, re-run the eval.
 
 Full table with publisher, type and purpose: [sources.csv](sources.csv).
 
-## 7. Sample Q&A (5 of 10 — full set in [sample_qa.md](sample_qa.md))
+## 7. Sample Q&A (5 of 12 — full set in [sample_qa.md](sample_qa.md))
 
 **Q: What is the expense ratio of HDFC Flexi Cap Fund?**
 > The Total Expense Ratio (TER) of HDFC Flexi Cap Fund is 1.37% for the Regular Plan and 0.77% for the Direct Plan, including additional expenses and GST on management fees. TER is deducted from the scheme's assets daily, so the published NAV is already net of it.
@@ -166,12 +167,14 @@ Full table with publisher, type and purpose: [sources.csv](sources.csv).
 | "Last updated from sources" | Stamped on every factual answer (`UPDATED` in `corpus.js`) |
 | One clear citation | Exactly one URL per answer; Direct-plan questions cite the Direct-plan page |
 | Facts-only UI note | Header badge + composer footer + welcome card |
+| Graceful small talk | Greetings, "how are you", thanks, compliments, acknowledgements, language requests, feelings, off-topic asks and gibberish are recognised in code (no LLM) and answered with a brief in-character reply plus suggested fact questions — see `SMALLTALK` in `engine.js` |
 
 ## 9. Known limits
 
 - **Facts go stale.** TER changes monthly and AUM changes daily; values were verified on 16 Sep 2026 and every answer says so. A production version would re-scrape the scheme pages nightly and fail closed if a page changes shape.
-- **Keyword retrieval, not embeddings.** BM25 + synonyms handles the ~50-chunk corpus well (65/65 eval cases) but would need embeddings and re-ranking beyond a few hundred chunks or across AMCs.
-- **English only.** Hinglish works only when the fact words are English ("hdfc flexi cap ka expense ratio kya hai"); pure Hindi is not supported.
+- **Keyword retrieval, not embeddings.** BM25 + synonyms handles the ~50-chunk corpus well (92/92 eval cases) but would need embeddings and re-ranking beyond a few hundred chunks or across AMCs.
+- **English only.** Hinglish works only when the fact words are English ("hdfc flexi cap ka expense ratio kya hai"); pure Hindi is not supported — and the assistant says so when asked to switch language.
+- **Small talk is pattern-based.** Chit-chat is recognised by regex families (wellbeing, identity, thanks, compliments, acknowledgements, language, feelings, off-topic), which cover the common phrasings in the eval but not every possible one; an unrecognised pleasantry falls through to the "didn't catch that" or "not in my sources" reply, both of which offer tap-to-ask chips. A production version would route these through a small intent classifier.
 - **Not covered by design.** Taxation on redemption (LTCG/STCG), IDCW options, NRI/KYC eligibility, STP/SWP, changing or stopping a SIP, nominations and buy/sell steps are outside the 25-page corpus — the assistant says so and points to the scheme's official page rather than guessing.
 - **Regex guardrails are conservative.** Words like "better" or "best" always trigger a refusal even in factual phrasings ("which plan has the better TER?") — deliberately biased toward refusing rather than accidentally advising. Neutral superlatives ("lowest", "highest", "which has…") are treated as factual and answered with a side-by-side table.
 - **One AMC.** Extending to another AMC means adding its scheme pages to `corpus.js`; the engine is AMC-agnostic.
